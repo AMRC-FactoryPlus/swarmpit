@@ -1,0 +1,88 @@
+version: '3.7'
+services:
+  app:
+    image: swarmpit/swarmpit:1.9
+    environment:
+      - SWARMPIT_DB=http://db:5984
+      - SWARMPIT_INFLUXDB=http://influxdb:8086
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == amrc-factoryP-1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.swarmpit.rule=Host(`swarmpit.amrc-factoryplus.***REMOVED***`)"
+        - "traefik.docker.network=factory-plus"
+        - "traefik.http.services.swarmpit.loadbalancer.server.port=8080"
+        - "traefik.http.routers.swarmpit.tls=true"
+    networks:
+      - factory-plus
+  db:
+    image: couchdb:2.3.0
+    volumes:
+      - db-data:/opt/couchdb/data
+    networks:
+      - factory-plus
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == amrc-factoryP-1
+      resources:
+        limits:
+          cpus: '0.30'
+          memory: 256M
+        reservations:
+          cpus: '0.15'
+          memory: 128M
+
+  influxdb:
+    image: influxdb:1.7
+    volumes:
+      - influx-data:/var/lib/influxdb
+    networks:
+      - factory-plus
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == amrc-factoryP-1
+      resources:
+        limits:
+          cpus: '0.60'
+          memory: 512M
+        reservations:
+          cpus: '0.30'
+          memory: 128M
+  agent:
+    image: amrc-factoryplus.***REMOVED***:5000/swarmpit-agent:2.2
+    environment:
+      - DOCKER_API_VERSION=1.40
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - factory-plus
+    deploy:
+      mode: global
+      labels:
+        swarmpit.agent: 'true'
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: 64M
+        reservations:
+          cpus: '0.05'
+          memory: 32M
+networks:
+  factory-plus:
+    external: true
+    name: factory-plus
+ 
+volumes:
+  db-data:
+    driver: local
+  influx-data:
+    driver: local
