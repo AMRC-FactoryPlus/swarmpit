@@ -16,7 +16,7 @@ services:
         delay: 5s
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.swarmpit.rule=Host(`swarmpit.amrc-factoryplus.***REMOVED***`)"
+        - "traefik.http.routers.swarmpit.rule=Host(`swarmpit.amrc-factoryplus.<domain>`)"
         - "traefik.docker.network=factory-plus"
         - "traefik.http.services.swarmpit.loadbalancer.server.port=8080"
         - "traefik.http.routers.swarmpit.tls=true"
@@ -58,7 +58,7 @@ services:
           cpus: '0.30'
           memory: 128M
   agent:
-    image: amrc-factoryplus.***REMOVED***:5000/swarmpit-agent:2.2
+    image: amrc-factoryplus.<domain>:5000/swarmpit-agent:2.2
     environment:
       - DOCKER_API_VERSION=1.40
     volumes:
